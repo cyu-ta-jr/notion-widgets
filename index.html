@@ -14,18 +14,19 @@
       --bg3: #2a2a2a;
       --line: #2f2f2f;
       --tx: #e6e5e3;
-      --tx2: #9b9a97;
-      --tx3: #6b6a67;
+      /* 【修正】背景に対して暗すぎた文字色トークンを、視認性の高い明るさに引き上げ */
+      --tx2: #b5b4b0; /* スタッツのラベル用（少し明るいグレー） */
+      --tx3: #8a8984; /* フッターや補助テキスト用（落ち着いたグレー） */
       --accent: #2f6fde;
     }
 
     html {
-      background-color: #191919 !important; /* Notionのダークモード背景に完全同化 */
+      background-color: #191919 !important;
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow-x: hidden; /* 横スクロールバーを防止 */
+      overflow-x: hidden;
     }
 
     body {
@@ -37,27 +38,25 @@
       height: 100%;
       display: flex;
       justify-content: center;
-      align-items: flex-start; /* 上端に揃える */
+      align-items: flex-start;
     }
 
-    /* 📌 【修正点】nav.html同様に最大幅を撤廃し、Notionの全幅設定に合わせて左右100%に広がる設計 */
     .cards-row {
       display: flex;
       gap: 28px;
       justify-content: center;
-      width: calc(100% - 2px); /* 1pxの境界線を考慮 */
+      width: calc(100% - 2px);
       box-sizing: border-box;
       padding: 4px 0;
     }
 
-    /* 各インジケーターカードの伸縮設定 */
     .card {
       background-color: var(--bg);
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 20px 22px 22px;
-      flex: 1; /* 2つのカードが均等に幅を分け合って伸縮 */
-      min-width: 0; /* 文字溢れ・崩れ防止 */
+      flex: 1;
+      min-width: 0;
       box-sizing: border-box;
     }
 
@@ -81,6 +80,7 @@
       font-weight: 500;
       letter-spacing: -0.03em;
       line-height: 1;
+      color: var(--tx);
     }
     .main-num span {
       font-size: 18px;
@@ -100,6 +100,7 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 16px;
       font-weight: 500;
+      color: var(--tx); /* 数値は本文と同じ最も明るい色に */
     }
     .stat-lbl {
       font-size: 11px;
@@ -163,7 +164,6 @@
       color: var(--tx3);
     }
 
-    /* 📱 【タブレット・スマホ対応】画面幅が1000px以下になったら自動で1カラム（縦並び）に変形 */
     @media (max-width: 1000px) {
       .cards-row {
         flex-direction: column;
@@ -227,7 +227,7 @@
   <script>
     function calculateDashboard() {
       // ※生年月日はさきほど書き換えたご自身の日付に再修正してください！
-      const birthDate = new Date('1994-04-12');
+      const birthDate = new Date('1980-12-14');
       const targetAge = 90; 
       const today = new Date();
       
