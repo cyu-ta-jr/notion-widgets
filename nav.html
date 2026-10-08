@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notion Navigation Widget</title>
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
@@ -16,21 +17,33 @@
       --tx3: #6b6a67;
     }
 
-    body {
-      background-color: transparent; /* Notionの背景に完全に馴染ませる */
-      color: var(--tx);
-      font-family: "Zen Kaku Gothic New", sans-serif;
+    /* 📌 【重要】htmlとbodyの両方に、Notionのダークモード背景色を強制適用して白枠を完全に消滅させます */
+    html {
+      background-color: #191919 !important; /* Notion標準のダークモード背景色 */
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: center;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
     }
 
-    /* 添付デザインを完全再現したナビゲーション */
-    .nav-container {
+    body {
+      background-color: #191919 !important;
+      font-family: "Zen Kaku Gothic New", sans-serif;
+      margin: 0;
+      padding: 0;
       width: 100%;
-      max-width: 1128px; /* Handoffの1240pxから左右padding 56pxを引いた幅 */
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center; /* 枠の上下中央にぴったり配置 */
+      overflow: hidden;
+    }
+
+    /* 動的に伸縮するナビゲーションコンテナ */
+    .nav-container {
+      width: calc(100% - 2px); /* 1pxの境界線を考慮 */
+      max-width: 1128px; /* コンテンツ幅に最適化 */
       background-color: var(--bg2);
       border: 1px solid var(--line);
       border-radius: 10px;
@@ -51,6 +64,7 @@
       transition: background-color .12s, box-shadow .12s;
       cursor: pointer;
       user-select: none;
+      min-width: 0;
     }
 
     .nav-num {
@@ -63,17 +77,25 @@
     .nav-label {
       font-size: 13px;
       font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    /* ホバー時の背景変化 */
     .nav-item:hover {
       background-color: var(--bg3);
     }
 
-    /* 添付画像のアクティブ状態のデザイン */
     .nav-item.active {
       background-color: var(--bg);
       box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 0 0 1px var(--line);
+    }
+
+    /* 1000px以下で4列×2行に美しく変形 */
+    @media (max-width: 1000px) {
+      .nav-container {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
   </style>
 </head>
@@ -107,8 +129,6 @@
   </div>
 
   <script>
-    // ⚙️ 【Notion ページ内ジャンプのID設定】
-    // 移動させたいNotionブロックのURL末尾にある「#xxxxx」の英数字をここに貼り付けてください。
     const NOTION_BLOCK_URLS = {
       '01': '#YOUR_TASK_BLOCK_ID_HERE',
       '02': '#YOUR_PROJECT_BLOCK_ID_HERE',
@@ -117,18 +137,15 @@
       '05': '#YOUR_STASH_BLOCK_ID_HERE',
       '06': '#YOUR_WISH_BLOCK_ID_HERE',
       '07': '#YOUR_RISK_BLOCK_ID_HERE',
-      '08': '#YOUR_DAYS_BLOCK_ID_HERE', // 日数ウィジェットのブロックID
+      '08': '#YOUR_DAYS_BLOCK_ID_HERE',
     };
 
     function navigateToBlock(id, element) {
-      // クリックしたボタンをアクティブにする
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       element.classList.add('active');
 
-      // Notionの親ページをターゲットの場所までスクロールさせる
       const targetHash = NOTION_BLOCK_URLS[id];
       if (targetHash && targetHash !== '#') {
-        // 親ウィンドウ（Notionのページ）にハッシュを送り、最上部URLを書き換えて強制スクロール
         window.open(window.parent.location.origin + window.parent.location.pathname + targetHash, '_parent');
       }
     }
