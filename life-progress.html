@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Progress Widget</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #191919;
+      --bg2: #202020;
+      --bg3: #2a2a2a;
+      --line: #2f2f2f;
+      --tx: #ffffff;
+      --tx2: #ffffff;
+      --tx3: #ffffff;
+      --accent: #2f6fde;
+    }
+
+    html, body {
+      background-color: #191919 !important;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: "Zen Kaku Gothic New", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background-color: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px 22px 22px;
+      width: calc(100% - 2px);
+      box-sizing: border-box;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #ffffff !important;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .main-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 48px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: #ffffff !important;
+    }
+    .main-num span { font-size: 18px; }
+
+    .stats-container {
+      display: flex;
+      gap: 18px;
+      text-align: right;
+      margin-bottom: 4px;
+    }
+    .stat-box { display: flex; flex-direction: column; }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: #ffffff !important;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      color: #ffffff !important;
+      margin-top: 2px;
+      opacity: 0.8;
+    }
+
+    .progress-bar-container {
+      height: 6px;
+      background-color: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      margin-top: 10px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #ffffff;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(60, 1fr); /* 10年1行(60列)に完璧フィット */
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      aspect-ratio: 1;
+      border-radius: 50%; /* 正円ドット */
+      background-color: var(--bg3);
+    }
+    .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
+    .dot.today {
+      background-color: var(--accent);
+      position: relative;
+      box-shadow: 0 0 0 2px rgba(47, 111, 222, 0.4);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #ffffff !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="label">生涯の消化日数（90 歳まで）</div>
+        <div class="main-num" id="life-pct">0.0<span>%</span></div>
+      </div>
+      <div class="stats-container">
+        <div class="stat-box"><div class="stat-val" id="age">0</div><div class="stat-lbl">現在の年齢</div></div>
+        <div class="stat-box"><div class="stat-val" id="lived">0</div><div class="stat-lbl">生きた日</div></div>
+        <div class="stat-box"><div class="stat-val" id="left">0</div><div class="stat-lbl">残り日</div></div>
+      </div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="life-bar"></div>
+    </div>
+    <div class="grid" id="life-grid"></div>
+    <div class="footer">
+      <div>0 歳</div>
+      <div>1 ドット = 2 ヶ月</div>
+      <div>90 歳</div>
+    </div>
+  </div>
+
+  <script>
+    function calculateLife() {
+      // ⚙️【重要】ご自身の本当の生年月日に書き換えてください！
+      const birthDate = new Date('1980-12-14');
+      const targetAge = 90; 
+      const today = new Date();
+      
+      const endDate = new Date(birthDate.getTime());
+      endDate.setFullYear(birthDate.getFullYear() + targetAge);
+      const livedDays = Math.floor((today - birthDate) / 86400000);
+      const totalLifeDays = Math.floor((endDate - birthDate) / 86400000);
+      const leftLifeDays = totalLifeDays - livedDays;
+      const lifePct = ((livedDays / totalLifeDays) * 100).toFixed(1);
+
+      let currentAge = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { currentAge--; }
+
+      document.getElementById('life-pct').innerHTML = `${lifePct}<span>%</span>`;
+      document.getElementById('age').innerText = currentAge;
+      document.getElementById('lived').innerText = livedDays.toLocaleString();
+      document.getElementById('left').innerText = leftLifeDays.toLocaleString();
+      document.getElementById('life-bar').style.width = `${lifePct}%`;
+
+      const totalLifeDots = (targetAge * 12) / 2;
+      const passedMonths = ((today - birthDate) / (365.25 / 12 * 86400000));
+      const passedLifeDots = Math.floor(passedMonths / 2);
+
+      const lifeGrid = document.getElementById('life-grid');
+      lifeGrid.innerHTML = '';
+      for (let i = 0; i < totalLifeDots; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if (i < passedLifeDots) dot.classList.add('passed');
+        else if (i === passedLifeDots) dot.classList.add('today');
+        lifeGrid.appendChild(dot);
+      }
+    }
+    calculateLife();
+  </script>
+</body>
+</html>

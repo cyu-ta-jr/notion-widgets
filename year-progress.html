@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Year Progress Widget</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #191919;
+      --bg2: #202020;
+      --bg3: #2a2a2a;
+      --line: #2f2f2f;
+      --tx: #ffffff;
+      --tx2: #ffffff;
+      --tx3: #ffffff;
+      --accent: #2f6fde;
+    }
+
+    html, body {
+      background-color: #191919 !important; /* Notionの背景に完全同化 */
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: "Zen Kaku Gothic New", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center; /* 枠の上下中央にぴったり配置 */
+    }
+
+    .card {
+      background-color: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px 22px 22px;
+      width: calc(100% - 2px); /* 1pxの境界線を考慮 */
+      box-sizing: border-box;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #ffffff !important;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .main-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 48px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: #ffffff !important;
+    }
+    .main-num span { font-size: 18px; }
+
+    .stats-container {
+      display: flex;
+      gap: 18px;
+      text-align: right;
+      margin-bottom: 4px;
+    }
+    .stat-box { display: flex; flex-direction: column; }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: #ffffff !important;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      color: #ffffff !important;
+      margin-top: 2px;
+      opacity: 0.8;
+    }
+
+    .progress-bar-container {
+      height: 6px;
+      background-color: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      margin-top: 10px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #ffffff;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(61, 1fr); /* 常に61列に美しくフィット */
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      aspect-ratio: 1;
+      border-radius: 1.5px; /* 四角形ドット */
+      background-color: var(--bg3);
+    }
+    .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
+    .dot.today {
+      background-color: var(--accent);
+      position: relative;
+      box-shadow: 0 0 0 2px rgba(47, 111, 222, 0.4);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #ffffff !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="label" id="year-title">年の消化日数</div>
+        <div class="main-num" id="pct">0.0<span>%</span></div>
+      </div>
+      <div class="stats-container">
+        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">経過日</div></div>
+        <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">残り日</div></div>
+        <div class="stat-box"><div class="stat-val" id="remaining-weeks">0</div><div class="stat-lbl">残り週</div></div>
+      </div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="bar"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="footer">
+      <div>JAN 01</div>
+      <div id="year-today-label">TODAY · --/--</div>
+      <div>DEC 31</div>
+    </div>
+  </div>
+
+  <script>
+    function calculateYear() {
+      const today = new Date();
+      const year = today.getFullYear();
+      document.getElementById('year-title').innerText = `${year} 年の消化日数`;
+      
+      const startOfYear = new Date(year, 0, 1);
+      const passedDays = Math.floor((today - startOfYear) / 86400000) + 1;
+      const totalDays = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+      const remainingDays = totalDays - passedDays;
+      const remainingWeeks = Math.floor(remainingDays / 7);
+      const yearPct = ((passedDays / totalDays) * 100).toFixed(1);
+
+      document.getElementById('pct').innerHTML = `${yearPct}<span>%</span>`;
+      document.getElementById('passed-days').innerText = passedDays;
+      document.getElementById('remaining-days').innerText = remainingDays;
+      document.getElementById('remaining-weeks').innerText = remainingWeeks;
+      document.getElementById('bar').style.width = `${yearPct}%`;
+      
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('year-today-label').innerText = `TODAY · ${mm}/${dd}`;
+
+      const yearGrid = document.getElementById('grid');
+      yearGrid.innerHTML = '';
+      for (let i = 1; i <= totalDays; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if (i < passedDays) dot.classList.add('passed');
+        else if (i === passedDays) dot.classList.add('today');
+        yearGrid.appendChild(dot);
+      }
+    }
+    calculateYear();
+  </script>
+</body>
+</html>
