@@ -39,25 +39,25 @@
       overflow: hidden;
     }
 
-    /* 📌 【修正点】最大幅の制限(max-width)を完全に撤廃し、左右100%目一杯に広がるよう設計 */
     .nav-container {
-      width: calc(100% - 2px); /* 左右の1px枠線を考慮 */
+      width: calc(100% - 2px);
       background-color: var(--bg2);
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 6px;
       box-sizing: border-box;
       display: grid;
-      grid-template-columns: repeat(8, 1fr); /* 画面幅に合わせて各ボタンが均等に伸縮 */
+      grid-template-columns: repeat(8, 1fr);
       gap: 6px;
     }
 
+    /* 📌 【修正点】デザインを維持したまま、リンク要素(<a>)として機能するように調整 */
     .nav-item {
       display: flex;
       flex-direction: column;
       padding: 10px 12px;
       border-radius: 7px;
-      text-decoration: none;
+      text-decoration: none; /* 下線を消す */
       color: var(--tx);
       transition: background-color .12s, box-shadow .12s;
       cursor: pointer;
@@ -90,70 +90,48 @@
       box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 0 0 1px var(--line);
     }
 
-    /* 📱 【タブレット・スマホ対応】画面幅が1000px以下になったら自動で4列×2行に変形 */
     @media (max-width: 1000px) {
-      .nav-container {
-        grid-template-columns: repeat(4, 1fr);
-      }
+      .nav-container { grid-template-columns: repeat(4, 1fr); }
     }
-
-    /* 📱 【超小型デバイス用】画面幅が500px以下になったら自動で2列×4行に変形 */
     @media (max-width: 500px) {
-      .nav-container {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .nav-container { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
 
+  <!-- 📌 【修正点】Notionの親ウィンドウを直接ジャンプさせるため、target="_parent" を指定した正規URLリンク構造に変更 -->
   <div class="nav-container">
-    <div class="nav-item active" onclick="navigateToBlock('01', this)">
+    <a href="https://notion.com" target="_parent" class="nav-item active" onclick="setActive(this)">
       <div class="nav-num">01</div><div class="nav-label">タスク</div>
-    </div>
-    <div class="nav-item" onclick="navigateToBlock('02', this)">
+    </a>
+    <a href="https://notion.com" target="_parent" class="nav-item" onclick="setActive(this)">
       <div class="nav-num">02</div><div class="nav-label">プロジェクト</div>
-    </div>
-    <div class="nav-item" onclick="navigateToBlock('03', this)">
+    </a>
+    <a href="https://notion.com" target="_parent" class="nav-item" onclick="setActive(this)">
       <div class="nav-num">03</div><div class="nav-label">カレンダー</div>
-    </div>
-    <div class="nav-item" onclick="navigateToBlock('04', this)">
+    </a>
+    <a href="https://notion.com" target="_parent" class="nav-item" onclick="setActive(this)">
       <div class="nav-num">04</div><div class="nav-label">目標</div>
-    </div>
-    <div class="nav-item" onclick="navigateToBlock('05', this)">
+    </a>
+    <a href="https://notion.com" target="_parent" class="nav-item" onclick="setActive(this)">
       <div class="nav-num">05</div><div class="nav-label">Brain Stash</div>
-    </div>
-    <div class="nav-item" onclick="navigateToBlock('06', this)">
+    </a>
+    <a href="https://notion.com" target="_parent" class="nav-item" onclick="setActive(this)">
       <div class="nav-num">06</div><div class="nav-label">WishList</div>
-    </div>
-    <div class="nav-item" onclick="navigateToBlock('07', this)">
+    </a>
+    <a href="https://notion.com" target="_parent" class="nav-item" onclick="setActive(this)">
       <div class="nav-num">07</div><div class="nav-label">リスク</div>
-    </div>
-    <div class="nav-item" onclick="navigateToBlock('08', this)">
+    </a>
+    <a href="https://notion.com" target="_parent" class="nav-item" onclick="setActive(this)">
       <div class="nav-num">08</div><div class="nav-label">日数</div>
-    </div>
+    </a>
   </div>
 
   <script>
-    const NOTION_BLOCK_URLS = {
-      '01': '#3f24fed3a8e780bea303cc8d60368791',
-      '02': '#3f24fed3a8e7800587bfc15b133fe217',
-      '03': '#3f24fed3a8e780408f81d6e1c5a78a57',
-      '04': '#3f24fed3a8e7806e9c5aff78ded6f40b',
-      '05': '#3f24fed3a8e780168172f42fcaee254d',
-      '06': '#3f24fed3a8e780c088e1ffbc3f8c1f03',
-      '07': '3f24fed3a8e7802699fce2c45548132d',
-      '08': '#3f34fed3a8e7802dbd47ee0a2cb4bdb5',
-    };
-
-    function navigateToBlock(id, element) {
+    function setActive(element) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       element.classList.add('active');
-
-      const targetHash = NOTION_BLOCK_URLS[id];
-      if (targetHash && targetHash !== '#') {
-        window.open(window.parent.location.origin + window.parent.location.pathname + targetHash, '_parent');
-      }
     }
   </script>
 </body>
