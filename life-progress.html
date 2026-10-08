@@ -35,17 +35,17 @@
       align-items: center;
     }
 
-    /* 📌 左側と100%同じ高さ「200px」に固定 */
     .card {
       background-color: var(--bg);
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 20px 22px 18px;
+      padding: 20px 22px 22px;
       width: calc(100% - 2px);
-      height: 200px;
+      height: calc(100% - 2px);
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
     }
 
     .header {
@@ -108,15 +108,17 @@
       transition: width 0.5s ease;
     }
 
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      justify-content: space-between;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(60, 1fr);
       gap: 2px;
-    }
-
-    /* 📌 左側と共通のクッションスペース */
-    .spacer {
-      flex-grow: 1;
     }
 
     .dot {
@@ -137,7 +139,7 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: #ffffff !important;
-      margin-top: 4px;
+      margin-top: 12px;
     }
   </style>
 </head>
@@ -159,21 +161,18 @@
       <div class="progress-bar-fill" id="life-bar"></div>
     </div>
     
-    <div class="grid" id="life-grid"></div>
-    
-    <!-- 📌 クッションを追加 -->
-    <div class="spacer"></div>
-    
-    <div class="footer">
-      <div>0 歳</div>
-      <div>1 ドット = 2 ヶ月</div>
-      <div>90 歳</div>
+    <div class="content-area">
+      <div class="grid" id="life-grid"></div>
+      <div class="footer">
+        <div>0 歳</div>
+        <div>1 ドット = 2 ヶ月</div>
+        <div>90 歳</div>
+      </div>
     </div>
   </div>
 
   <script>
     function calculateLife() {
-      // ⚙️ ご自身の生年月日に再設定してください！
       const birthDate = new Date('1980-12-14');
       const targetAge = 90; 
       const today = new Date();
@@ -204,8 +203,8 @@
       for (let i = 0; i < totalLifeDots; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot';
-        if (i < passedDots) dot.classList.add('passed');
-        else if (i === passedDots) dot.classList.add('today');
+        if (i < passedLifeDots) dot.classList.add('passed');
+        else if (i === passedLifeDots) dot.classList.add('today');
         lifeGrid.appendChild(dot);
       }
     }
