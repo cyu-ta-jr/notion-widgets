@@ -13,10 +13,10 @@
       --bg2: #202020;
       --bg3: #2a2a2a;
       --line: #2f2f2f;
-      --tx: #e6e5e3;
-      /* 【修正】背景に対して暗すぎた文字色トークンを、視認性の高い明るさに引き上げ */
-      --tx2: #b5b4b0; /* スタッツのラベル用（少し明るいグレー） */
-      --tx3: #8a8984; /* フッターや補助テキスト用（落ち着いたグレー） */
+      /* 📌 視認性を極限まで高めるため、すべてのテキスト用トークンを純白に統一 */
+      --tx: #ffffff;
+      --tx2: #ffffff;
+      --tx3: #ffffff;
       --accent: #2f6fde;
     }
 
@@ -69,7 +69,7 @@
 
     .label {
       font-size: 12px;
-      color: var(--tx2);
+      color: #ffffff !important; /* バーと同じ純白 */
       font-weight: 500;
       margin-bottom: 6px;
     }
@@ -80,7 +80,7 @@
       font-weight: 500;
       letter-spacing: -0.03em;
       line-height: 1;
-      color: var(--tx);
+      color: #ffffff !important; /* バーと同じ純白 */
     }
     .main-num span {
       font-size: 18px;
@@ -100,12 +100,13 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 16px;
       font-weight: 500;
-      color: var(--tx); /* 数値は本文と同じ最も明るい色に */
+      color: #ffffff !important; /* バーと同じ純白 */
     }
     .stat-lbl {
       font-size: 11px;
-      color: var(--tx2);
+      color: #ffffff !important; /* バーと同じ純白 */
       margin-top: 2px;
+      opacity: 0.8; /* ラベルとして少しだけ馴染ませるための透明度（不要なら削除可） */
     }
 
     .progress-bar-container {
@@ -161,7 +162,7 @@
       justify-content: space-between;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      color: var(--tx3);
+      color: #ffffff !important; /* バーと同じ純白 */
     }
 
     @media (max-width: 1000px) {
@@ -226,8 +227,8 @@
 
   <script>
     function calculateDashboard() {
-      // ※生年月日はさきほど書き換えたご自身の日付に再修正してください！
-      const birthDate = new Date('1980-12-14');
+      // ※生年月日はご自身の日付に書き換えてください！
+      const birthDate = new Date('1994-04-12');
       const targetAge = 90; 
       const today = new Date();
       
