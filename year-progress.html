@@ -20,7 +20,7 @@
     }
 
     html, body {
-      background-color: #191919 !important; /* Notionの背景に完全同化 */
+      background-color: #191919 !important;
       margin: 0;
       padding: 0;
       width: 100%;
@@ -32,7 +32,7 @@
       font-family: "Zen Kaku Gothic New", sans-serif;
       display: flex;
       justify-content: center;
-      align-items: center; /* 枠の上下中央にぴったり配置 */
+      align-items: center;
     }
 
     .card {
@@ -40,7 +40,7 @@
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 20px 22px 22px;
-      width: calc(100% - 2px); /* 1pxの境界線を考慮 */
+      width: calc(100% - 2px);
       box-sizing: border-box;
     }
 
@@ -106,14 +106,15 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(61, 1fr); /* 常に61列に美しくフィット */
+      grid-template-columns: repeat(61, 1fr);
       gap: 2px;
-      margin-bottom: 12px;
+      /* 📌 【修正点】右側の生涯日数（9行）と高さを完全に一致させるため、下部に不足分の余白を自動計算して付与 */
+      margin-bottom: calc(12px + 9px); 
     }
 
     .dot {
       aspect-ratio: 1;
-      border-radius: 1.5px; /* 四角形ドット */
+      border-radius: 1.5px;
       background-color: var(--bg3);
     }
     .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
@@ -137,7 +138,7 @@
   <div class="card">
     <div class="header">
       <div>
-        <div class="label" id="year-title">年の消化日数</div>
+        <div class="label" id="year-title">2026 年の消化日数</div>
         <div class="main-num" id="pct">0.0<span>%</span></div>
       </div>
       <div class="stats-container">
