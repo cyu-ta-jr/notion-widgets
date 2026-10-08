@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Notion Navigation Widget</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #191919;
+      --bg2: #202020;
+      --bg3: #2a2a2a;
+      --line: #2f2f2f;
+      --tx: #e6e5e3;
+      --tx3: #6b6a67;
+    }
+
+    body {
+      background-color: transparent; /* Notionの背景に完全に馴染ませる */
+      color: var(--tx);
+      font-family: "Zen Kaku Gothic New", sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* 添付デザインを完全再現したナビゲーション */
+    .nav-container {
+      width: 100%;
+      max-width: 1128px; /* Handoffの1240pxから左右padding 56pxを引いた幅 */
+      background-color: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px;
+      border-radius: 7px;
+      text-decoration: none;
+      color: var(--tx);
+      transition: background-color .12s, box-shadow .12s;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .nav-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--tx3);
+      margin-bottom: 2px;
+    }
+
+    .nav-label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* ホバー時の背景変化 */
+    .nav-item:hover {
+      background-color: var(--bg3);
+    }
+
+    /* 添付画像のアクティブ状態のデザイン */
+    .nav-item.active {
+      background-color: var(--bg);
+      box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 0 0 1px var(--line);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="nav-container">
+    <div class="nav-item active" onclick="navigateToBlock('01', this)">
+      <div class="nav-num">01</div><div class="nav-label">タスク</div>
+    </div>
+    <div class="nav-item" onclick="navigateToBlock('02', this)">
+      <div class="nav-num">02</div><div class="nav-label">プロジェクト</div>
+    </div>
+    <div class="nav-item" onclick="navigateToBlock('03', this)">
+      <div class="nav-num">03</div><div class="nav-label">カレンダー</div>
+    </div>
+    <div class="nav-item" onclick="navigateToBlock('04', this)">
+      <div class="nav-num">04</div><div class="nav-label">目標</div>
+    </div>
+    <div class="nav-item" onclick="navigateToBlock('05', this)">
+      <div class="nav-num">05</div><div class="nav-label">Brain Stash</div>
+    </div>
+    <div class="nav-item" onclick="navigateToBlock('06', this)">
+      <div class="nav-num">06</div><div class="nav-label">WishList</div>
+    </div>
+    <div class="nav-item" onclick="navigateToBlock('07', this)">
+      <div class="nav-num">07</div><div class="nav-label">リスク</div>
+    </div>
+    <div class="nav-item" onclick="navigateToBlock('08', this)">
+      <div class="nav-num">08</div><div class="nav-label">日数</div>
+    </div>
+  </div>
+
+  <script>
+    // ⚙️ 【Notion ページ内ジャンプのID設定】
+    // 移動させたいNotionブロックのURL末尾にある「#xxxxx」の英数字をここに貼り付けてください。
+    const NOTION_BLOCK_URLS = {
+      '01': '#YOUR_TASK_BLOCK_ID_HERE',
+      '02': '#YOUR_PROJECT_BLOCK_ID_HERE',
+      '03': '#YOUR_CALENDAR_BLOCK_ID_HERE',
+      '04': '#YOUR_GOAL_BLOCK_ID_HERE',
+      '05': '#YOUR_STASH_BLOCK_ID_HERE',
+      '06': '#YOUR_WISH_BLOCK_ID_HERE',
+      '07': '#YOUR_RISK_BLOCK_ID_HERE',
+      '08': '#YOUR_DAYS_BLOCK_ID_HERE', // 日数ウィジェットのブロックID
+    };
+
+    function navigateToBlock(id, element) {
+      // クリックしたボタンをアクティブにする
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      element.classList.add('active');
+
+      // Notionの親ページをターゲットの場所までスクロールさせる
+      const targetHash = NOTION_BLOCK_URLS[id];
+      if (targetHash && targetHash !== '#') {
+        // 親ウィンドウ（Notionのページ）にハッシュを送り、最上部URLを書き換えて強制スクロール
+        window.open(window.parent.location.origin + window.parent.location.pathname + targetHash, '_parent');
+      }
+    }
+  </script>
+</body>
+</html>
