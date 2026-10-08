@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notion Progress Dashboard</title>
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
@@ -18,23 +19,45 @@
       --accent: #2f6fde;
     }
 
+    html {
+      background-color: #191919 !important; /* Notionのダークモード背景に完全同化 */
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden; /* 横スクロールバーを防止 */
+    }
+
     body {
-      background-color: #121212;
-      color: var(--tx);
+      background-color: #191919 !important;
       font-family: "Zen Kaku Gothic New", sans-serif;
       margin: 0;
-      padding: 40px;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* 上端に揃える */
+    }
+
+    /* 📌 【修正点】nav.html同様に最大幅を撤廃し、Notionの全幅設定に合わせて左右100%に広がる設計 */
+    .cards-row {
       display: flex;
       gap: 28px;
       justify-content: center;
+      width: calc(100% - 2px); /* 1pxの境界線を考慮 */
+      box-sizing: border-box;
+      padding: 4px 0;
     }
 
+    /* 各インジケーターカードの伸縮設定 */
     .card {
       background-color: var(--bg);
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 20px 22px 22px;
-      width: 536px;
+      flex: 1; /* 2つのカードが均等に幅を分け合って伸縮 */
+      min-width: 0; /* 文字溢れ・崩れ防止 */
       box-sizing: border-box;
     }
 
@@ -139,71 +162,78 @@
       font-size: 10px;
       color: var(--tx3);
     }
+
+    /* 📱 【タブレット・スマホ対応】画面幅が1000px以下になったら自動で1カラム（縦並び）に変形 */
+    @media (max-width: 1000px) {
+      .cards-row {
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1. 一年の消化日数インジケーター -->
-  <div class="card">
-    <div class="header">
-      <div>
-        <div class="label" id="year-title">2026 年の消化日数</div>
-        <div class="main-num" id="pct">0.0<span>%</span></div>
+  <div class="cards-row">
+    <!-- 1. 一年の消化日数インジケーター -->
+    <div class="card">
+      <div class="header">
+        <div>
+          <div class="label" id="year-title">年の消化日数</div>
+          <div class="main-num" id="pct">0.0<span>%</span></div>
+        </div>
+        <div class="stats-container">
+          <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">経過日</div></div>
+          <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">残り日</div></div>
+          <div class="stat-box"><div class="stat-val" id="remaining-weeks">0</div><div class="stat-lbl">残り週</div></div>
+        </div>
       </div>
-      <div class="stats-container">
-        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">経過日</div></div>
-        <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">残り日</div></div>
-        <div class="stat-box"><div class="stat-val" id="remaining-weeks">0</div><div class="stat-lbl">残り週</div></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="bar"></div>
+      </div>
+      <div class="grid year-grid" id="grid"></div>
+      <div class="footer">
+        <div>JAN 01</div>
+        <div id="year-today-label">TODAY · --/--</div>
+        <div>DEC 31</div>
       </div>
     </div>
-    <div class="progress-bar-container">
-      <div class="progress-bar-fill" id="bar"></div>
-    </div>
-    <div class="grid year-grid" id="grid"></div>
-    <div class="footer">
-      <div>JAN 01</div>
-      <div id="year-today-label">TODAY · --/--</div>
-      <div>DEC 31</div>
-    </div>
-  </div>
 
-  <!-- 2. 生涯の消化日数インジケーター（90歳変更版） -->
-  <div class="card">
-    <div class="header">
-      <div>
-        <div class="label">生涯の消化日数（90 歳まで）</div>
-        <div class="main-num" id="life-pct">0.0<span>%</span></div>
+    <!-- 2. 生涯の消化日数インジケーター（90歳変更版） -->
+    <div class="card">
+      <div class="header">
+        <div>
+          <div class="label">生涯の消化日数（90 歳まで）</div>
+          <div class="main-num" id="life-pct">0.0<span>%</span></div>
+        </div>
+        <div class="stats-container">
+          <div class="stat-box"><div class="stat-val" id="age">0</div><div class="stat-lbl">現在の年齢</div></div>
+          <div class="stat-box"><div class="stat-val" id="lived">0</div><div class="stat-lbl">生きた日</div></div>
+          <div class="stat-box"><div class="stat-val" id="left">0</div><div class="stat-lbl">残り日</div></div>
+        </div>
       </div>
-      <div class="stats-container">
-        <div class="stat-box"><div class="stat-val" id="age">0</div><div class="stat-lbl">現在の年齢</div></div>
-        <div class="stat-box"><div class="stat-val" id="lived">0</div><div class="stat-lbl">生きた日</div></div>
-        <div class="stat-box"><div class="stat-val" id="left">0</div><div class="stat-lbl">残り日</div></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="life-bar"></div>
       </div>
-    </div>
-    <div class="progress-bar-container">
-      <div class="progress-bar-fill" id="life-bar"></div>
-    </div>
-    <div class="grid life-grid" id="life-grid"></div>
-    <div class="footer">
-      <div>0 歳</div>
-      <div>1 ドット = 2 ヶ月</div>
-      <div>90 歳</div>
+      <div class="grid life-grid" id="life-grid"></div>
+      <div class="footer">
+        <div>0 歳</div>
+        <div>1 ドット = 2 ヶ月</div>
+        <div>90 歳</div>
+      </div>
     </div>
   </div>
 
   <script>
     function calculateDashboard() {
-      // 【★ここを変更！】ご自身の生年月日を設定してください
-      const birthDate = new Date('1980-12-14');
+      // ※生年月日はさきほど書き換えたご自身の日付に再修正してください！
+      const birthDate = new Date('1994-04-12');
       const targetAge = 90; 
-      
-      // リアルタイムの現在日時に連動
       const today = new Date();
       
       // --- 1. 一年の消化日数計算 ---
       const year = today.getFullYear();
       document.getElementById('year-title').innerText = `${year} 年の消化日数`;
-      
       const startOfYear = new Date(year, 0, 1);
       const passedDays = Math.floor((today - startOfYear) / 86400000) + 1;
       const totalDays = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
@@ -231,16 +261,14 @@
         yearGrid.appendChild(dot);
       }
 
-      // --- 2. 生涯の消化日数計算 (90歳まで) ---
+      // --- 2. 生涯の消化日数計算 ---
       const endDate = new Date(birthDate.getTime());
       endDate.setFullYear(birthDate.getFullYear() + targetAge);
-
       const livedDays = Math.floor((today - birthDate) / 86400000);
       const totalLifeDays = Math.floor((endDate - birthDate) / 86400000);
       const leftLifeDays = totalLifeDays - livedDays;
       const lifePct = ((livedDays / totalLifeDays) * 100).toFixed(1);
 
-      // 年齢の精密計算
       let currentAge = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { currentAge--; }
