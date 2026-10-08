@@ -45,7 +45,6 @@
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
     }
 
     .header {
@@ -113,6 +112,7 @@
       flex-direction: column;
       flex-grow: 1;
       justify-content: space-between;
+      min-height: 0;
     }
 
     .grid {
@@ -173,7 +173,8 @@
 
   <script>
     function calculateLife() {
-      const birthDate = new Date('1980-12-14');
+      // ⚙️ 【要修正】ご自身の生年月日に書き換えてください
+      const birthDate = new Date('1994-04-12');
       const targetAge = 90; 
       const today = new Date();
       
@@ -203,6 +204,7 @@
       for (let i = 0; i < totalLifeDots; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot';
+        /* 📌 文法エラー修正：未定義の passedDots ではなく、正しく計算された passedLifeDots を参照 */
         if (i < passedLifeDots) dot.classList.add('passed');
         else if (i === passedLifeDots) dot.classList.add('today');
         lifeGrid.appendChild(dot);
