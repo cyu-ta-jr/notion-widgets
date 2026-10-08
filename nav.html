@@ -17,9 +17,8 @@
       --tx3: #6b6a67;
     }
 
-    /* 📌 【重要】htmlとbodyの両方に、Notionのダークモード背景色を強制適用して白枠を完全に消滅させます */
     html {
-      background-color: #191919 !important; /* Notion標準のダークモード背景色 */
+      background-color: #191919 !important;
       margin: 0;
       padding: 0;
       width: 100%;
@@ -36,21 +35,20 @@
       height: 100%;
       display: flex;
       justify-content: center;
-      align-items: center; /* 枠の上下中央にぴったり配置 */
+      align-items: center;
       overflow: hidden;
     }
 
-    /* 動的に伸縮するナビゲーションコンテナ */
+    /* 📌 【修正点】最大幅の制限(max-width)を完全に撤廃し、左右100%目一杯に広がるよう設計 */
     .nav-container {
-      width: calc(100% - 2px); /* 1pxの境界線を考慮 */
-      max-width: 1128px; /* コンテンツ幅に最適化 */
+      width: calc(100% - 2px); /* 左右の1px枠線を考慮 */
       background-color: var(--bg2);
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 6px;
       box-sizing: border-box;
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
+      grid-template-columns: repeat(8, 1fr); /* 画面幅に合わせて各ボタンが均等に伸縮 */
       gap: 6px;
     }
 
@@ -80,6 +78,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-align: left;
     }
 
     .nav-item:hover {
@@ -91,10 +90,17 @@
       box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 0 0 1px var(--line);
     }
 
-    /* 1000px以下で4列×2行に美しく変形 */
+    /* 📱 【タブレット・スマホ対応】画面幅が1000px以下になったら自動で4列×2行に変形 */
     @media (max-width: 1000px) {
       .nav-container {
         grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    /* 📱 【超小型デバイス用】画面幅が500px以下になったら自動で2列×4行に変形 */
+    @media (max-width: 500px) {
+      .nav-container {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
   </style>
