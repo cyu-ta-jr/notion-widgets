@@ -35,13 +35,17 @@
       align-items: center;
     }
 
+    /* 📌 カード全体の高さを「200px」に完全固定し、縦並びのレイアウトに設定 */
     .card {
       background-color: var(--bg);
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 20px 22px 22px;
+      padding: 20px 22px 18px;
       width: calc(100% - 2px);
+      height: 200px; 
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
     }
 
     .header {
@@ -108,8 +112,11 @@
       display: grid;
       grid-template-columns: repeat(61, 1fr);
       gap: 2px;
-      /* 📌 【修正点】右側の生涯日数（9行）と高さを完全に一致させるため、下部に不足分の余白を自動計算して付与 */
-      margin-bottom: calc(12px + 9px); 
+    }
+
+    /* 📌 【新設】ドットとフッターの間で自動で広がり、高さを合わせるクッションスペース */
+    .spacer {
+      flex-grow: 1;
     }
 
     .dot {
@@ -130,6 +137,7 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: #ffffff !important;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -138,7 +146,7 @@
   <div class="card">
     <div class="header">
       <div>
-        <div class="label" id="year-title">2026 年の消化日数</div>
+        <div class="label" id="year-title">年の消化日数</div>
         <div class="main-num" id="pct">0.0<span>%</span></div>
       </div>
       <div class="stats-container">
@@ -150,7 +158,12 @@
     <div class="progress-bar-container">
       <div class="progress-bar-fill" id="bar"></div>
     </div>
+    
     <div class="grid" id="grid"></div>
+    
+    <!-- 📌 クッションを追加 -->
+    <div class="spacer"></div>
+    
     <div class="footer">
       <div>JAN 01</div>
       <div id="year-today-label">TODAY · --/--</div>
