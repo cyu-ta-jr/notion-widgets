@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Notion Progress Dashboard</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #191919;
+      --bg2: #202020;
+      --bg3: #2a2a2a;
+      --line: #2f2f2f;
+      --tx: #e6e5e3;
+      --tx2: #9b9a97;
+      --tx3: #6b6a67;
+      --accent: #2f6fde;
+    }
+
+    body {
+      background-color: #121212;
+      color: var(--tx);
+      font-family: "Zen Kaku Gothic New", sans-serif;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      gap: 28px;
+      justify-content: center;
+    }
+
+    .card {
+      background-color: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px 22px 22px;
+      width: 536px;
+      box-sizing: border-box;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: var(--tx2);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .main-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 48px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .main-num span {
+      font-size: 18px;
+    }
+
+    .stats-container {
+      display: flex;
+      gap: 22px;
+      text-align: right;
+      margin-bottom: 4px;
+    }
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--tx2);
+      margin-top: 2px;
+    }
+
+    .progress-bar-container {
+      height: 6px;
+      background-color: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      margin-top: 10px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #ffffff;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .grid {
+      display: grid;
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+    .year-grid {
+      grid-template-columns: repeat(61, 1fr);
+    }
+    .life-grid {
+      grid-template-columns: repeat(60, 1fr);
+    }
+
+    .dot {
+      aspect-ratio: 1;
+      background-color: var(--bg3);
+    }
+    .year-grid .dot {
+      border-radius: 1.5px;
+    }
+    .life-grid .dot {
+      border-radius: 50%;
+    }
+
+    .dot.passed {
+      background-color: rgba(155, 154, 151, 0.45);
+    }
+    .dot.today {
+      background-color: var(--accent);
+      position: relative;
+      box-shadow: 0 0 0 2px rgba(47, 111, 222, 0.4);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--tx3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 一年の消化日数インジケーター -->
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="label" id="year-title">2026 年の消化日数</div>
+        <div class="main-num" id="pct">0.0<span>%</span></div>
+      </div>
+      <div class="stats-container">
+        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">経過日</div></div>
+        <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">残り日</div></div>
+        <div class="stat-box"><div class="stat-val" id="remaining-weeks">0</div><div class="stat-lbl">残り週</div></div>
+      </div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="bar"></div>
+    </div>
+    <div class="grid year-grid" id="grid"></div>
+    <div class="footer">
+      <div>JAN 01</div>
+      <div id="year-today-label">TODAY · --/--</div>
+      <div>DEC 31</div>
+    </div>
+  </div>
+
+  <!-- 2. 生涯の消化日数インジケーター（90歳変更版） -->
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="label">生涯の消化日数（90 歳まで）</div>
+        <div class="main-num" id="life-pct">0.0<span>%</span></div>
+      </div>
+      <div class="stats-container">
+        <div class="stat-box"><div class="stat-val" id="age">0</div><div class="stat-lbl">現在の年齢</div></div>
+        <div class="stat-box"><div class="stat-val" id="lived">0</div><div class="stat-lbl">生きた日</div></div>
+        <div class="stat-box"><div class="stat-val" id="left">0</div><div class="stat-lbl">残り日</div></div>
+      </div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="life-bar"></div>
+    </div>
+    <div class="grid life-grid" id="life-grid"></div>
+    <div class="footer">
+      <div>0 歳</div>
+      <div>1 ドット = 2 ヶ月</div>
+      <div>90 歳</div>
+    </div>
+  </div>
+
+  <script>
+    function calculateDashboard() {
+      // 【★ここを変更！】ご自身の生年月日を設定してください
+      const birthDate = new Date('1980-12-14');
+      const targetAge = 90; 
+      
+      // リアルタイムの現在日時に連動
+      const today = new Date();
+      
+      // --- 1. 一年の消化日数計算 ---
+      const year = today.getFullYear();
+      document.getElementById('year-title').innerText = `${year} 年の消化日数`;
+      
+      const startOfYear = new Date(year, 0, 1);
+      const passedDays = Math.floor((today - startOfYear) / 86400000) + 1;
+      const totalDays = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+      const remainingDays = totalDays - passedDays;
+      const remainingWeeks = Math.floor(remainingDays / 7);
+      const yearPct = ((passedDays / totalDays) * 100).toFixed(1);
+
+      document.getElementById('pct').innerHTML = `${yearPct}<span>%</span>`;
+      document.getElementById('passed-days').innerText = passedDays;
+      document.getElementById('remaining-days').innerText = remainingDays;
+      document.getElementById('remaining-weeks').innerText = remainingWeeks;
+      document.getElementById('bar').style.width = `${yearPct}%`;
+      
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('year-today-label').innerText = `TODAY · ${mm}/${dd}`;
+
+      const yearGrid = document.getElementById('grid');
+      yearGrid.innerHTML = '';
+      for (let i = 1; i <= totalDays; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if (i < passedDays) dot.classList.add('passed');
+        else if (i === passedDays) dot.classList.add('today');
+        yearGrid.appendChild(dot);
+      }
+
+      // --- 2. 生涯の消化日数計算 (90歳まで) ---
+      const endDate = new Date(birthDate.getTime());
+      endDate.setFullYear(birthDate.getFullYear() + targetAge);
+
+      const livedDays = Math.floor((today - birthDate) / 86400000);
+      const totalLifeDays = Math.floor((endDate - birthDate) / 86400000);
+      const leftLifeDays = totalLifeDays - livedDays;
+      const lifePct = ((livedDays / totalLifeDays) * 100).toFixed(1);
+
+      // 年齢の精密計算
+      let currentAge = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { currentAge--; }
+
+      document.getElementById('life-pct').innerHTML = `${lifePct}<span>%</span>`;
+      document.getElementById('age').innerText = currentAge;
+      document.getElementById('lived').innerText = livedDays.toLocaleString();
+      document.getElementById('left').innerText = leftLifeDays.toLocaleString();
+      document.getElementById('life-bar').style.width = `${lifePct}%`;
+
+      const totalLifeDots = (targetAge * 12) / 2;
+      const passedMonths = ((today - birthDate) / (365.25 / 12 * 86400000));
+      const passedLifeDots = Math.floor(passedMonths / 2);
+
+      const lifeGrid = document.getElementById('life-grid');
+      lifeGrid.innerHTML = '';
+      for (let i = 0; i < totalLifeDots; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if (i < passedLifeDots) dot.classList.add('passed');
+        else if (i === passedLifeDots) dot.classList.add('today');
+        lifeGrid.appendChild(dot);
+      }
+    }
+
+    calculateDashboard();
+  </script>
+</body>
+</html>
