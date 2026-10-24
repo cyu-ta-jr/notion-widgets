@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Year Progress Widget</title>
+  <title>Life Progress Widget</title>
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://googleapis.com" rel="stylesheet">
   <style>
     :root {
       --bg: #191919;
@@ -111,19 +111,19 @@
       display: flex;
       flex-direction: column;
       flex-grow: 1;
-      justify-content: space-between;
       min-height: 0; 
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(61, 1fr);
-      gap: 2px;
+      /* 90歳（540ヶ月）を1行60ドット（5年分）×9行で綺麗に収める配置 */
+      grid-template-columns: repeat(60, 1fr);
+      gap: 1.5px;
     }
 
     .dot {
       aspect-ratio: 1;
-      border-radius: 1.5px;
+      border-radius: 50%;
       background-color: var(--bg3);
     }
     .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
@@ -136,10 +136,15 @@
     .footer {
       display: flex;
       justify-content: space-between;
+      align-items: flex-end;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: #ffffff !important;
-      margin-top: 12px;
+      margin-top: 6px;
+    }
+
+    #pct {
+      font-size: 20px;
     }
   </style>
 </head>
@@ -148,13 +153,13 @@
   <div class="card">
     <div class="header">
       <div>
-        <div class="label" id="year-title">年の消化日数</div>
+        <div class="label" id="year-title">生涯消化日数 (90迄)</div>
         <div class="main-num" id="pct">0.0<span>%</span></div>
       </div>
       <div class="stats-container">
-        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">経過日</div></div>
+        <div class="stat-box"><div class="stat-val" id="age">0</div><div class="stat-lbl">年齢</div></div>
+        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">生きた日</div></div>
         <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">残り日</div></div>
-        <div class="stat-box"><div class="stat-val" id="remaining-weeks">0</div><div class="stat-lbl">残り週</div></div>
       </div>
     </div>
     <div class="progress-bar-container">
@@ -164,47 +169,74 @@
     <div class="content-area">
       <div class="grid" id="grid"></div>
       <div class="footer">
-        <div>JAN 01</div>
-        <div id="year-today-label">TODAY · --/--</div>
-        <div>DEC 31</div>
+        <div>0 歳</div>
+        <div>1 ドット = 2 ヶ月</div>
+        <div>90 歳</div>
       </div>
     </div>
   </div>
 
   <script>
-    function calculateYear() {
+    // ==========================================
+    // 【設定】ここにあなたの生年月日を入力してください
+    // ==========================================
+    const BIRTH_DATE = "1980-12-14"; 
+
+    function calculateLife() {
       const today = new Date();
-      const year = today.getFullYear();
-      document.getElementById('year-title').innerText = `${year} 年の消化日数`;
+      const birth = new Date(BIRTH_DATE);
       
-      const startOfYear = new Date(year, 0, 1);
-      const passedDays = Math.floor((today - startOfYear) / 86400000) + 1;
-      const totalDays = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
-      const remainingDays = totalDays - passedDays;
-      const remainingWeeks = Math.floor(remainingDays / 7);
-      const yearPct = ((passedDays / totalDays) * 100).toFixed(1);
+      // 90歳の誕生日を計算
+      const targetAge = 90;
+      const ninetyYearsOld = new Date(birth.getFullYear() + targetAge, birth.getMonth(), birth.getDate());
 
-      document.getElementById('pct').innerHTML = `${yearPct}<span>%</span>`;
-      document.getElementById('passed-days').innerText = passedDays;
-      document.getElementById('remaining-days').innerText = remainingDays;
-      document.getElementById('remaining-weeks').innerText = remainingWeeks;
-      document.getElementById('bar').style.width = `${yearPct}%`;
+      // 各種日数の計算 (1日 = 86,400,000ミリ秒)
+      const passedMs = today - birth;
+      const passedDays = Math.floor(passedMs / 86400000);
+      const totalMs = ninetyYearsOld - birth;
+      const totalDays = Math.floor(totalMs / 86400000);
+      const remainingDays = Math.max(0, totalDays - passedDays);
       
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('year-today-label').innerText = `TODAY · ${mm}/${dd}`;
+      // 進捗率の計算
+      const lifePct = Math.min(100, Math.max(0, (passedDays / totalDays) * 100)).toFixed(1);
 
-      const yearGrid = document.getElementById('grid');
-      yearGrid.innerHTML = '';
-      for (let i = 1; i <= totalDays; i++) {
+      // 満年齢の計算
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+
+      // 画面への反映（カンマ区切りフォーマット）
+      document.getElementById('pct').innerHTML = `${lifePct}<span>%</span>`;
+      document.getElementById('age').innerText = age;
+      document.getElementById('passed-days').innerText = passedDays.toLocaleString();
+      document.getElementById('remaining-days').innerText = remainingDays.toLocaleString();
+      document.getElementById('bar').style.width = `${lifePct}%`;
+
+      // ドット数の計算（90歳まで 1ドット=2ヶ月 なので合計 90 * 6 = 540 ドット）
+      const totalDots = targetAge * 6; 
+      
+      // 生まれてから何ヶ月経ったかをベースに経過ドット数を計算
+      const passedMonths = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
+      const passedDots = Math.min(totalDots, Math.max(0, Math.floor(passedMonths / 2)));
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      for (let i = 1; i <= totalDots; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot';
-        if (i < passedDays) dot.classList.add('passed');
-        else if (i === passedDays) dot.classList.add('today');
-        yearGrid.appendChild(dot);
+        if (i < passedDots) {
+          dot.classList.add('passed');
+        } else if (i === passedDots) {
+          dot.classList.add('today');
+        }
+        grid.appendChild(dot);
       }
     }
-    calculateYear();
+
+    calculateLife();
   </script>
 </body>
 </html>
