@@ -6,10 +6,10 @@
 <title>Today</title>
 <link rel="preconnect" href="https://googleapis.com">
 <link rel="preconnect" href="https://gstatic.com" crossorigin>
-<link href="https://googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* ===== Tokens (life-progress を基準に統一) ===== */
-  :root{
+  /* ===== Tokens (life-progress.txt と共通化) ===== */
+  :root {
     --bg: #191919;
     --bg2: #202020;
     --bg3: #2a2a2a;
@@ -18,8 +18,10 @@
     --tx2: #ffffff;
     --tx3: #ffffff;
     --accent: #2f6fde;
-    --font: "Zen Kaku Gothic New", sans-serif;
-    --mono: "JetBrains Mono", monospace;
+    --font: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+    --sun: #ff7369; 
+    --sat: #6aa3f5;
   }
 
   html, body {
@@ -35,6 +37,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ===== Card ===== */
@@ -50,6 +53,7 @@
     flex-direction: column;
   }
 
+  /* ===== Header (日付大きく表示するメインエリア) ===== */
   .header {
     display: flex;
     justify-content: space-between;
@@ -57,24 +61,47 @@
     margin-bottom: 12px;
   }
 
+  .left-block {
+    display: flex;
+    flex-direction: column;
+  }
+
   .label {
     font-size: 12px;
     color: #ffffff !important;
     font-weight: 500;
     margin-bottom: 6px;
+    opacity: 0.8;
   }
 
-  .main-num {
-    font-family: var(--mono);
-    font-size: 48px;
-    font-weight: 500;
-    letter-spacing: -0.03em;
+  /* 大きな日付表示のスタイル */
+  .date {
+    display: flex;
+    align-items: baseline;
     line-height: 1;
+    white-space: nowrap;
+  }
+  .date .md {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 48px; /* life-progress の数字サイズに統一 */
+    letter-spacing: -0.03em;
     color: #ffffff !important;
   }
-  .main-num span { font-size: 18px; }
+  .date .md .sep {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 400;
+    margin: 0 0.02em;
+  }
+  .date .wd {
+    font-size: 18px;
+    font-weight: 700;
+    margin-left: 10px;
+  }
+  .date .wd.sun { color: var(--sun); } 
+  .date .wd.sat { color: var(--sat); }
 
-  /* ===== Stats ===== */
+  /* 右側カウンターエリア */
   .stats-container {
     display: flex;
     gap: 18px;
@@ -122,15 +149,16 @@
     min-height: 0;
   }
 
-  /* 365 or 366個のドットを綺麗に並べるためのグリッド */
+  /* life-progress に完全に合わせた横60列グリッド */
   .grid {
     display: grid;
-    grid-template-columns: repeat(61, 1fr);
+    grid-template-columns: repeat(60, 1fr);
     gap: 2px;
   }
   .dot {
-    aspect-ratio: 1;
-    border-radius: 50%; /* 添付の丸型に統一 */
+    width: 100%;
+    aspect-ratio: 1 / 1; /* 正円を強制維持 */
+    border-radius: 50%;
     background-color: var(--bg3);
   }
   .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
@@ -155,9 +183,12 @@
 
   <div class="card">
     <div class="header">
-      <div>
+      <div class="left-block">
         <div class="label" id="title-lbl">2026 年の消化日数</div>
-        <div class="main-num" id="pct">0.0<span>%</span></div>
+        <div class="date">
+          <span class="md"><span id="m">10</span><span class="sep">/</span><span id="d">24</span></span>
+          <span class="wd" id="wd">土曜日</span>
+        </div>
       </div>
       <div class="stats-container">
         <div class="stat-box"><div class="stat-val" id="doy">0</div><div class="stat-lbl">経過日</div></div>
@@ -174,7 +205,7 @@
       <div class="grid" id="dots"></div>
       <div class="footer">
         <div id="y0">JAN 01</div>
-        <div id="sub-clock">TODAY · 10/24</div>
+        <div id="pct">0.0%</div>
         <div>DEC 31</div>
       </div>
     </div>
@@ -183,16 +214,18 @@
 <script>
 (function(){
   const TZ = "Asia/Tokyo";
+  const WD = ["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"];
   const $ = id => document.getElementById(id);
 
   function parts(now){
     const f = new Intl.DateTimeFormat("en-US", {
-      timeZone: TZ, year:"numeric", month:"numeric", day:"numeric",
-      hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+      timeZone: TZ, year:"numeric", month:"numeric", day:"numeric"
     });
     const o = {};
     f.formatToParts(now).forEach(p => o[p.type] = p.value);
-    return { y: +o.year, m: +o.month, d: +o.day, hh: o.hour, mm: o.minute };
+    const y = +o.year, m = +o.month, d = +o.day;
+    const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+    return { y, m, d, w };
   }
 
   function isoWeek(y, m, d){
@@ -209,22 +242,25 @@
     const doy = Math.round((Date.UTC(p.y, p.m - 1, p.d) - Date.UTC(p.y, 0, 1)) / 864e5) + 1;
     const pct = (doy / total) * 100;
     
-    // 総週数から現在の週数を引いて「残り週」を計算
     const totalWeeks = isoWeek(p.y, 12, 31);
     const currentWeek = isoWeek(p.y, p.m, p.d);
 
     $("title-lbl").textContent = `${p.y} 年の消化日数`;
-    $("pct").innerHTML = `${pct.toFixed(1)}<span>%</span>`;
+    $("m").textContent = String(p.m).padStart(2, "0");
+    $("d").textContent = String(p.d).padStart(2, "0");
+    
+    const wd = $("wd");
+    wd.textContent = WD[p.w];
+    wd.className = "wd" + (p.w === 0 ? " sun" : p.w === 6 ? " sat" : "");
+
     $("doy").textContent = doy;
     $("wk").textContent = Math.max(0, totalWeeks - currentWeek);
     $("left").textContent = total - doy;
     $("bar").style.width = pct.toFixed(1) + "%";
     
-    // フッター情報
-    $("y0").textContent = "JAN 01";
-    $("sub-clock").textContent = `TODAY · ${String(p.m).padStart(2, '0')}/${String(p.d).padStart(2, '0')}`;
+    $("y0").textContent = "JAN 01 · " + p.y;
+    $("pct").textContent = pct.toFixed(1) + "%";
 
-    // ドット生成
     const dotsContainer = $("dots");
     if (dotsContainer.childElementCount !== total || dotsContainer.dataset.doy != doy) {
       dotsContainer.innerHTML = "";
@@ -245,7 +281,6 @@
   }
 
   render();
-  // 1分ごとに更新
   const tick = () => { render(); setTimeout(tick, 60000 - (Date.now() % 60000) + 50); };
   setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
