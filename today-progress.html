@@ -6,7 +6,7 @@
 <title>Today</title>
 <link rel="preconnect" href="https://googleapis.com">
 <link rel="preconnect" href="https://gstatic.com" crossorigin>
-<link href="https://googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://googleapis.com" rel="stylesheet">
 <style>
   /* ===== Tokens (life-progress.txt と共通化) ===== */
   :root {
@@ -145,7 +145,6 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    justify-content: space-between;
     min-height: 0;
   }
 
@@ -153,12 +152,12 @@
   .grid {
     display: grid;
     grid-template-columns: repeat(60, 1fr);
-    gap: 2px;
+    gap: 1.5px; /* 隙間を少し狭めてドット自体を大きめに変更 */
   }
   .dot {
     width: 100%;
-    aspect-ratio: 1 / 1; /* 正円を強制維持 */
-    border-radius: 50%;
+    aspect-ratio: 1 / 1; /* 正方形を維持 */
+    /* border-radius: 50%; を削除して四角形に変更 */
     background-color: var(--bg3);
   }
   .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
@@ -172,10 +171,16 @@
   .footer {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end; /* 進捗率が大きくなった際の縦方向の位置揃え */
     font-family: var(--mono);
     font-size: 10px;
     color: #ffffff !important;
-    margin-top: 12px;
+    margin-top: 6px; /* ドット絵との間の余白を詰める調整 */
+  }
+
+  /* 進捗率のフォントサイズを2倍に */
+  #pct {
+    font-size: 20px;
   }
 </style>
 </head>
