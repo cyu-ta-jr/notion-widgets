@@ -6,7 +6,7 @@
   <title>Life Progress Widget</title>
   <link rel="preconnect" href="https://googleapis.com">
   <link rel="preconnect" href="https://gstatic.com" crossorigin>
-  <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://googleapis.com" rel="stylesheet">
   <style>
     :root {
       --bg: #191919;
@@ -111,14 +111,14 @@
       display: flex;
       flex-direction: column;
       flex-grow: 1;
-      justify-content: space-between;
-      min-height: 0;
+      min-height: 0; 
     }
 
     .grid {
       display: grid;
+      /* 90歳（540ヶ月）を1行60ドット（5年分）×9行で綺麗に収める配置 */
       grid-template-columns: repeat(60, 1fr);
-      gap: 2px;
+      gap: 1.5px;
     }
 
     .dot {
@@ -136,10 +136,15 @@
     .footer {
       display: flex;
       justify-content: space-between;
+      align-items: flex-end;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: #ffffff !important;
-      margin-top: 12px;
+      margin-top: 6px;
+    }
+
+    #pct {
+      font-size: 20px;
     }
   </style>
 </head>
@@ -148,21 +153,21 @@
   <div class="card">
     <div class="header">
       <div>
-        <div class="label">生涯の消化日数（90 歳まで）</div>
-        <div class="main-num" id="life-pct">0.0<span>%</span></div>
+        <div class="label" id="year-title">生涯消化日数 (90迄)</div>
+        <div class="main-num" id="pct">0.0<span>%</span></div>
       </div>
       <div class="stats-container">
-        <div class="stat-box"><div class="stat-val" id="age">0</div><div class="stat-lbl">現在の年齢</div></div>
-        <div class="stat-box"><div class="stat-val" id="lived">0</div><div class="stat-lbl">生きた日</div></div>
-        <div class="stat-box"><div class="stat-val" id="left">0</div><div class="stat-lbl">残り日</div></div>
+        <div class="stat-box"><div class="stat-val" id="age">0</div><div class="stat-lbl">年齢</div></div>
+        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">生きた日</div></div>
+        <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">残り日</div></div>
       </div>
     </div>
     <div class="progress-bar-container">
-      <div class="progress-bar-fill" id="life-bar"></div>
+      <div class="progress-bar-fill" id="bar"></div>
     </div>
     
     <div class="content-area">
-      <div class="grid" id="life-grid"></div>
+      <div class="grid" id="grid"></div>
       <div class="footer">
         <div>0 歳</div>
         <div>1 ドット = 2 ヶ月</div>
@@ -172,44 +177,65 @@
   </div>
 
   <script>
+    // ==========================================
+    // 【設定】ここにあなたの生年月日を入力してください
+    // ==========================================
+    const BIRTH_DATE = "1980-12-14"; 
+
     function calculateLife() {
-      // ⚙️ 【要修正】ご自身の生年月日に書き換えてください
-      const birthDate = new Date('1980-12-14');
-      const targetAge = 90; 
       const today = new Date();
+      const birth = new Date(BIRTH_DATE);
       
-      const endDate = new Date(birthDate.getTime());
-      endDate.setFullYear(birthDate.getFullYear() + targetAge);
-      const livedDays = Math.floor((today - birthDate) / 86400000);
-      const totalLifeDays = Math.floor((endDate - birthDate) / 86400000);
-      const leftLifeDays = totalLifeDays - livedDays;
-      const lifePct = ((livedDays / totalLifeDays) * 100).toFixed(1);
+      // 90歳の誕生日を計算
+      const targetAge = 90;
+      const ninetyYearsOld = new Date(birth.getFullYear() + targetAge, birth.getMonth(), birth.getDate());
 
-      let currentAge = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { currentAge--; }
+      // 各種日数の計算 (1日 = 86,400,000ミリ秒)
+      const passedMs = today - birth;
+      const passedDays = Math.floor(passedMs / 86400000);
+      const totalMs = ninetyYearsOld - birth;
+      const totalDays = Math.floor(totalMs / 86400000);
+      const remainingDays = Math.max(0, totalDays - passedDays);
+      
+      // 進捗率の計算
+      const lifePct = Math.min(100, Math.max(0, (passedDays / totalDays) * 100)).toFixed(1);
 
-      document.getElementById('life-pct').innerHTML = `${lifePct}<span>%</span>`;
-      document.getElementById('age').innerText = currentAge;
-      document.getElementById('lived').innerText = livedDays.toLocaleString();
-      document.getElementById('left').innerText = leftLifeDays.toLocaleString();
-      document.getElementById('life-bar').style.width = `${lifePct}%`;
+      // 満年齢の計算
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
 
-      const totalLifeDots = (targetAge * 12) / 2;
-      const passedMonths = ((today - birthDate) / (365.25 / 12 * 86400000));
-      const passedLifeDots = Math.floor(passedMonths / 2);
+      // 画面への反映（カンマ区切りフォーマット）
+      document.getElementById('pct').innerHTML = `${lifePct}<span>%</span>`;
+      document.getElementById('age').innerText = age;
+      document.getElementById('passed-days').innerText = passedDays.toLocaleString();
+      document.getElementById('remaining-days').innerText = remainingDays.toLocaleString();
+      document.getElementById('bar').style.width = `${lifePct}%`;
 
-      const lifeGrid = document.getElementById('life-grid');
-      lifeGrid.innerHTML = '';
-      for (let i = 0; i < totalLifeDots; i++) {
+      // ドット数の計算（90歳まで 1ドット=2ヶ月 なので合計 90 * 6 = 540 ドット）
+      const totalDots = targetAge * 6; 
+      
+      // 生まれてから何ヶ月経ったかをベースに経過ドット数を計算
+      const passedMonths = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
+      const passedDots = Math.min(totalDots, Math.max(0, Math.floor(passedMonths / 2)));
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      for (let i = 1; i <= totalDots; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot';
-        /* 📌 文法エラー修正：未定義の passedDots ではなく、正しく計算された passedLifeDots を参照 */
-        if (i < passedLifeDots) dot.classList.add('passed');
-        else if (i === passedLifeDots) dot.classList.add('today');
-        lifeGrid.appendChild(dot);
+        if (i < passedDots) {
+          dot.classList.add('passed');
+        } else if (i === passedDots) {
+          dot.classList.add('today');
+        }
+        grid.appendChild(dot);
       }
     }
+
     calculateLife();
   </script>
 </body>
