@@ -17,6 +17,8 @@
       --tx2: #ffffff;
       --tx3: #ffffff;
       --accent: #2f6fde;
+      --sun: #ff7369; 
+      --sat: #6aa3f5;
     }
 
     html, body {
@@ -54,11 +56,19 @@
       margin-bottom: 12px;
     }
 
+    /* タイトルのカラーを100%の白色に修正 */
     .label {
       font-size: 12px;
       color: #ffffff !important;
       font-weight: 500;
       margin-bottom: 6px;
+      opacity: 1.0 !important;
+    }
+
+    /* 日付と曜日を横並びにするスタイル */
+    .date-container {
+      display: flex;
+      align-items: baseline;
     }
 
     .main-num {
@@ -69,7 +79,16 @@
       line-height: 1;
       color: #ffffff !important;
     }
-    .main-num span { font-size: 18px; }
+
+    /* 曜日のスタイル設定 */
+    .wd {
+      font-size: 18px;
+      font-weight: 700;
+      margin-left: 8px;
+      font-family: "Zen Kaku Gothic New", sans-serif;
+    }
+    .wd.sun { color: var(--sun); } 
+    .wd.sat { color: var(--sat); }
 
     .stats-container {
       display: flex;
@@ -107,7 +126,6 @@
       transition: width 0.5s ease;
     }
 
-    /* today-progressと高さを合わせるため、自動的な引き伸ばしを無くす */
     .content-area {
       display: flex;
       flex-direction: column;
@@ -115,15 +133,16 @@
       min-height: 0; 
     }
 
+    /* 横60列の四角グリッドに変更 */
     .grid {
       display: grid;
-      grid-template-columns: repeat(61, 1fr);
-      gap: 1.5px; /* 隙間を狭めてドットを少し大きめに変更 */
+      grid-template-columns: repeat(60, 1fr);
+      gap: 1.5px;
     }
 
+    /* ドットを四角形に変更 */
     .dot {
       aspect-ratio: 1;
-      border-radius: 50%; /* 丸のまま維持 */
       background-color: var(--bg3);
     }
     .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
@@ -136,14 +155,14 @@
     .footer {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end; /* 進捗率が大きくなった際の縦方向の位置揃え */
+      align-items: flex-end;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       color: #ffffff !important;
-      margin-top: 6px; /* ドット絵との間の余白を詰めて高さを合わせる */
+      margin-top: 6px; /* ドットとの隙間を詰める */
     }
 
-    /* 進捗率のフォントサイズを2倍に */
+    /* 最終行の進捗率フォントサイズを2倍に */
     #pct {
       font-size: 20px;
     }
@@ -154,15 +173,17 @@
   <div class="card">
     <div class="header">
       <div>
-        <!-- ラベルと年齢上限の文言修正 -->
-        <div class="label" id="year-title">生涯消化日数 (90迄)</div>
-        <div class="main-num" id="pct">0.0<span>%</span></div>
+        <div class="label" id="year-title">2026 年の消化日数</div>
+        <div class="date-container">
+          <div class="main-num" id="date-display">10/24</div>
+          <!-- 曜日を括弧表記で出力する要素 -->
+          <div class="wd" id="wd-display">(土)</div>
+        </div>
       </div>
       <div class="stats-container">
-        <!-- 「現在の年齢」を「年齢」に修正 -->
-        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">年齢</div></div>
-        <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">生きた日</div></div>
-        <div class="stat-box"><div class="stat-val" id="remaining-weeks">0</div><div class="stat-lbl">残り日</div></div>
+        <div class="stat-box"><div class="stat-val" id="passed-days">0</div><div class="stat-lbl">経過日</div></div>
+        <div class="stat-box"><div class="stat-val" id="remaining-weeks">0</div><div class="stat-lbl">残り週</div></div>
+        <div class="stat-box"><div class="stat-val" id="remaining-days">0</div><div class="stat-lbl">残り日</div></div>
       </div>
     </div>
     <div class="progress-bar-container">
@@ -172,50 +193,91 @@
     <div class="content-area">
       <div class="grid" id="grid"></div>
       <div class="footer">
-        <div>0 歳</div>
-        <div>1 ドット = 2 ヶ月</div>
-        <div>90 歳</div>
+        <div>JAN 01</div>
+        <div id="pct">0.0%</div>
+        <div>DEC 31</div>
       </div>
     </div>
   </div>
 
   <script>
     function calculateYear() {
-      // 元のコードのロジックをそのまま維持しています
-      const today = new Date();
-      const year = today.getFullYear();
+      const TZ = "Asia/Tokyo";
+      const WD = ["(日)", "(月)", "(火)", "(水)", "(木)", "(金)", "(土)"];
       
-      const startOfYear = new Date(year, 0, 1);
-      const passedDays = Math.floor((today - startOfYear) / 86400000) + 1;
+      const today = new Date();
+      
+      // 日本標準時に合わせた日付情報の取得
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ, year: "numeric", month: "numeric", day: "numeric"
+      });
+      const parts = {};
+      formatter.formatToParts(today).forEach(p => parts[p.type] = p.value);
+      
+      const year = +parts.year;
+      const month = +parts.month;
+      const day = +parts.day;
+      
+      // 曜日インデックスの取得
+      const wIndex = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+
+      document.getElementById('year-title').innerText = `${year} 年の消化日数`;
+      
+      // 日付の `MM/DD` 形式表示
+      const mm = String(month).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
+      document.getElementById('date-display').innerText = `${mm}/${dd}`;
+      
+      // 曜日の表示変更とクラス適用
+      const wdEl = document.getElementById('wd-display');
+      wdEl.innerText = WD[wIndex];
+      wdEl.className = "wd" + (wIndex === 0 ? " sun" : wIndex === 6 ? " sat" : "");
+
+      // 各種日数の計算
+      const startOfYear = new Date(Date.UTC(year, 0, 1));
+      const currentUTC = new Date(Date.UTC(year, month - 1, day));
+      const passedDays = Math.round((currentUTC - startOfYear) / 86400000) + 1;
       const totalDays = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
       const remainingDays = totalDays - passedDays;
-      const remainingWeeks = Math.floor(remainingDays / 7);
+      
+      // 週数の計算ロジック
+      function isoWeek(y, m, d) {
+        const t = new Date(Date.UTC(y, m - 1, d));
+        const dayNum = t.getUTCDay() || 7;
+        t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+        const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+        return Math.ceil(((t - y0) / 864e5 + 1) / 7);
+      }
+      const totalWeeks = isoWeek(year, 12, 31);
+      const currentWeek = isoWeek(year, month, day);
+      const remainingWeeks = Math.max(0, totalWeeks - currentWeek);
+
       const yearPct = ((passedDays / totalDays) * 100).toFixed(1);
 
-      // 初期表示用のモック値が入る設定
-      document.getElementById('pct').innerHTML = `51.0<span>%</span>`;
-      document.getElementById('passed-days').innerText = "45";
-      document.getElementById('remaining-days').innerText = "16,750";
-      document.getElementById('remaining-weeks').innerText = "16,122";
-      document.getElementById('bar').style.width = `51.0%`;
+      // 各要素へのデータ反映
+      document.getElementById('pct').innerText = `${yearPct}%`;
+      document.getElementById('passed-days').innerText = passedDays;
+      document.getElementById('remaining-days').innerText = remainingDays;
+      document.getElementById('remaining-weeks').innerText = remainingWeeks;
+      document.getElementById('bar').style.width = `${yearPct}%`;
 
+      // グリッドドット（四角）の生成
       const yearGrid = document.getElementById('grid');
       yearGrid.innerHTML = '';
-      
-      // 画像のドット配置（約51%の進捗、青い現在地ドット）を再現するための仮ビルド
-      // ※実際にお使いの「生涯計算用のJavaScriptロジック」がある場合は、適宜この下のループ等を置き換えてください。
-      const totalDots = 540; // 90歳×6列など元の仕様に合わせたドット数
-      const passedDots = Math.floor(totalDots * 0.51); 
-
-      for (let i = 1; i <= totalDots; i++) {
+      for (let i = 1; i <= totalDays; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot';
-        if (i < passedDots) dot.classList.add('passed');
-        else if (i === passedDots) dot.classList.add('today');
+        if (i < passedDays) dot.classList.add('passed');
+        else if (i === passedDays) dot.classList.add('today');
         yearGrid.appendChild(dot);
       }
     }
+    
     calculateYear();
+    // 1分ごとに更新をかける処理
+    const tick = () => { calculateYear(); setTimeout(tick, 60000 - (Date.now() % 60000) + 50); };
+    setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) calculateYear(); });
   </script>
 </body>
 </html>
