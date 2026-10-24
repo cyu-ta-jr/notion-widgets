@@ -66,12 +66,12 @@
     flex-direction: column;
   }
 
+  /* 2026年の消化日数のフォントカラーを完全な白色に修正 */
   .label {
     font-size: 12px;
     color: #ffffff !important;
     font-weight: 500;
     margin-bottom: 6px;
-    opacity: 0.8;
   }
 
   /* 大きな日付表示のスタイル */
@@ -192,7 +192,7 @@
         <div class="label" id="title-lbl">2026 年の消化日数</div>
         <div class="date">
           <span class="md"><span id="m">10</span><span class="sep">/</span><span id="d">24</span></span>
-          <span class="wd" id="wd">土曜日</span>
+          <span class="wd" id="wd">(土)</span>
         </div>
       </div>
       <div class="stats-container">
@@ -219,7 +219,8 @@
 <script>
 (function(){
   const TZ = "Asia/Tokyo";
-  const WD = ["日曜日","月曜日","火曜日","水曜日","木曜日","金曜日","土曜日"];
+  // 曜日表記をカッコ形式に修正
+  const WD = ["(日)","(月)","(火)","(水)","(木)","(金)","(土)"];
   const $ = id => document.getElementById(id);
 
   function parts(now){
