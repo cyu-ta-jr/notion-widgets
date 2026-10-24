@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Today</title>
+<link rel="preconnect" href="https://googleapis.com">
+<link rel="preconnect" href="https://gstatic.com" crossorigin>
+<link href="https://googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ===== Tokens (life-progress を基準に統一) ===== */
+  :root{
+    --bg: #191919;
+    --bg2: #202020;
+    --bg3: #2a2a2a;
+    --line: #2f2f2f;
+    --tx: #ffffff;
+    --tx2: #ffffff;
+    --tx3: #ffffff;
+    --accent: #2f6fde;
+    --font: "Zen Kaku Gothic New", sans-serif;
+    --mono: "JetBrains Mono", monospace;
+  }
+
+  html, body {
+    background-color: #191919 !important;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    font-family: var(--font);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* ===== Card ===== */
+  .card {
+    background-color: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 22px 22px;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 12px;
+  }
+
+  .label {
+    font-size: 12px;
+    color: #ffffff !important;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .main-num {
+    font-family: var(--mono);
+    font-size: 48px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: #ffffff !important;
+  }
+  .main-num span { font-size: 18px; }
+
+  /* ===== Stats ===== */
+  .stats-container {
+    display: flex;
+    gap: 18px;
+    text-align: right;
+    margin-bottom: 4px;
+  }
+  .stat-box { display: flex; flex-direction: column; }
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: #ffffff !important;
+  }
+  .stat-lbl {
+    font-size: 11px;
+    color: #ffffff !important;
+    margin-top: 2px;
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
+  /* ===== Progress Bar ===== */
+  .progress-bar-container {
+    height: 6px;
+    background-color: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    margin-top: 10px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background-color: #ffffff;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+
+  /* ===== Content Area ===== */
+  .content-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: space-between;
+    min-height: 0;
+  }
+
+  /* 365 or 366個のドットを綺麗に並べるためのグリッド */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(61, 1fr);
+    gap: 2px;
+  }
+  .dot {
+    aspect-ratio: 1;
+    border-radius: 50%; /* 添付の丸型に統一 */
+    background-color: var(--bg3);
+  }
+  .dot.passed { background-color: rgba(155, 154, 151, 0.45); }
+  .dot.today {
+    background-color: var(--accent);
+    position: relative;
+    box-shadow: 0 0 0 2px rgba(47, 111, 222, 0.4);
+  }
+
+  /* ===== Footer ===== */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #ffffff !important;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="label" id="title-lbl">2026 年の消化日数</div>
+        <div class="main-num" id="pct">0.0<span>%</span></div>
+      </div>
+      <div class="stats-container">
+        <div class="stat-box"><div class="stat-val" id="doy">0</div><div class="stat-lbl">経過日</div></div>
+        <div class="stat-box"><div class="stat-val" id="wk">0</div><div class="stat-lbl">残り週</div></div>
+        <div class="stat-box"><div class="stat-val" id="left">0</div><div class="stat-lbl">残り日</div></div>
+      </div>
+    </div>
+    
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="bar"></div>
+    </div>
+    
+    <div class="content-area">
+      <div class="grid" id="dots"></div>
+      <div class="footer">
+        <div id="y0">JAN 01</div>
+        <div id="sub-clock">TODAY · 10/24</div>
+        <div>DEC 31</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const TZ = "Asia/Tokyo";
+  const $ = id => document.getElementById(id);
+
+  function parts(now){
+    const f = new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ, year:"numeric", month:"numeric", day:"numeric",
+      hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+    });
+    const o = {};
+    f.formatToParts(now).forEach(p => o[p.type] = p.value);
+    return { y: +o.year, m: +o.month, d: +o.day, hh: o.hour, mm: o.minute };
+  }
+
+  function isoWeek(y, m, d){
+    const t = new Date(Date.UTC(y, m - 1, d));
+    const day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - y0) / 864e5 + 1) / 7);
+  }
+
+  function render(){
+    const p = parts(new Date());
+    const total = (p.y % 4 === 0 && p.y % 100 !== 0) || p.y % 400 === 0 ? 366 : 365;
+    const doy = Math.round((Date.UTC(p.y, p.m - 1, p.d) - Date.UTC(p.y, 0, 1)) / 864e5) + 1;
+    const pct = (doy / total) * 100;
+    
+    // 総週数から現在の週数を引いて「残り週」を計算
+    const totalWeeks = isoWeek(p.y, 12, 31);
+    const currentWeek = isoWeek(p.y, p.m, p.d);
+
+    $("title-lbl").textContent = `${p.y} 年の消化日数`;
+    $("pct").innerHTML = `${pct.toFixed(1)}<span>%</span>`;
+    $("doy").textContent = doy;
+    $("wk").textContent = Math.max(0, totalWeeks - currentWeek);
+    $("left").textContent = total - doy;
+    $("bar").style.width = pct.toFixed(1) + "%";
+    
+    // フッター情報
+    $("y0").textContent = "JAN 01";
+    $("sub-clock").textContent = `TODAY · ${String(p.m).padStart(2, '0')}/${String(p.d).padStart(2, '0')}`;
+
+    // ドット生成
+    const dotsContainer = $("dots");
+    if (dotsContainer.childElementCount !== total || dotsContainer.dataset.doy != doy) {
+      dotsContainer.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+      for (let i = 1; i <= total; i++) {
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        if (i < doy) {
+          dot.classList.add("passed");
+        } else if (i === doy) {
+          dot.classList.add("today");
+        }
+        fragment.appendChild(dot);
+      }
+      dotsContainer.appendChild(fragment);
+      dotsContainer.dataset.doy = doy;
+    }
+  }
+
+  render();
+  // 1分ごとに更新
+  const tick = () => { render(); setTimeout(tick, 60000 - (Date.now() % 60000) + 50); };
+  setTimeout(tick, 60000 - (Date.now() % 60000) + 50);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+})();
+</script>
+</body>
+</html>
